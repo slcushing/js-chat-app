@@ -1,0 +1,10 @@
+* {
+  box-sizing: border-box;
+}
+
+.newMessage {
+  border: solid 3px black;
+  height: 500px;
+}
+
+/*# sourceMappingURL=styles.css.map */
