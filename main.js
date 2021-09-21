@@ -1,24 +1,46 @@
-(function(){
+(function() {
     'use strict';
+
+    function generateHTML(message) {
+        // create some html and inject into the DOM
+        console.log('message', message);
+    }
+
+    /// RETRIEVE MESSAGES FROM API
 
     fetch('https://tiny-taco-server.herokuapp.com/herdingcats/')
     .then(response => response.json())
-    .then(data => console.log(data))
+    .then(messages => {
+        messages.forEach(message => generateHTML(message));
+    });
 
 
-    // const username = {
-    //     text: 'Stephanie',
-    // }
+    /// CREATE A NEW MESSAGES AND SAVE IT TO THE DATABASE
+
+    const message = {
+        username: 'Stephanie',
+        text: document.querySelector('input').value,
+    }
+
+    fetch('https://tiny-taco-server.herokuapp.com/herdingcats/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(message),
+        })
+        .then(response => response.json())
+        .then(message => generateHTML(message))
+        .catch(error => console.log('Whoopsie...cat got your tongue?', error))
     
-    // fetch('https://tiny-taco-server.herokuapp.com/herdingcats/', {
-    //     method:'POST',
-    //     body: JSON.stringify(username),
-    // })
-    // .then(response => response.json())
-    // .then(data => console.log(data))
-    // .catch(error => console.log('Error', error))
+
+   
+    
+    // const message = {
         
-    
+    // }
+
+  
 
 
 
@@ -27,13 +49,4 @@
 
 
 
-
-
-
-
-
-
-
-
-
-})
+})();
