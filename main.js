@@ -1,27 +1,46 @@
 (function() {
     'use strict';
-    
-    const user = prompt('Howyadoin - what\'s ya name?')
-    
-    const $messageBox = document.querySelector('ul');
 
-    function generateHTML(message) {
-        let li = document.createElement('li');
-        li.textContent = message.text;   // create some html and inject into the DOM
-        $messageBox.appendChild(li);
+    const messageBox = document.querySelector('ul');
+    const messageForm = document.querySelector('form');
+    let user = localStorage.getItem('user');
+    
+    if(!user) {
+        user = prompt('Howyadoin - what\'s ya name?');
+        localStorage.setItem('user', user);
     }
 
-    /// RETRIEVE MESSAGES FROM API
-
-    fetch('https://tiny-taco-server.herokuapp.com/herdingcats/')
-    .then(response => response.json())
-    .then(messages => {
-        messages.forEach(message => generateHTML(message));
-    });
+    // if you want to have a "logout button"
+    // fire a function that calls localStorage.removeItem('user'); 
 
 
-    /// CREATE A NEW MESSAGES AND SAVE IT TO THE DATABASE
-    document.querySelector('form').addEventListener('submit', function(event) {
+    function generateHTML(message) {
+        let messageHTML = `
+            <li>
+                <p>${message.text}</p>
+                <button data-id="${message.id}">Delete Me</button>
+            </li>
+        `
+        return messageHTML;
+    }
+    
+    function fetchMessages() {
+        /// RETRIEVE MESSAGES FROM API
+        fetch('https://tiny-taco-server.herokuapp.com/herdingcats/')
+        .then(response => response.json())
+        .then(messages => {
+            let html = "";
+            for(let i = 0; i < messages.length; i++) {
+                html += generateHTML(messages[i]);
+            }
+            messageBox.innerHTML = html;
+        });
+    }
+
+    fetchMessages();
+    setInterval(fetchMessages, 3000);
+
+    function addMessage(event) {
         event.preventDefault();
 
         const message = {
@@ -35,39 +54,36 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(message),
-            })
-            .then(response => response.json())
-            .then(message => generateHTML(message))
-            .catch(error => console.log('Whoopsie...cat got your tongue?', error));        
-    });
+        })
+        .then(response => response.json())
+        .then(message => {
+            const messageHTML = generateHTML(message);
+            messageBox.insertAdjacentHTML('beforeend', messageHTML);
+            messageForm.reset();
+        })
+        .catch(error => console.log('Whoopsie...cat got your tongue?', error));   
+    }
 
+    messageForm.addEventListener('submit', addMessage);
     
-    
 
-    document.querySelector('button').addEventListener('submit', function(event){
-        event.preventDefault();
 
-        fetch('https://tiny-taco-server.herokuapp.com/herdingcats/' + target, {
+
+    function deleteMessage(event) {
+        const id = event.target.dataset.id;
+        
+        fetch(`https://tiny-taco-server.herokuapp.com/herdingcats/${id}/`, {
             method: 'DELETE',
-            })
-            .then(response => {
-             if(!response.ok) {
-                 throw new Error('Something\'s not right', response.status); 
-             }
-             console.log('message was deleted');
-        
-             })
-        
-    })
-    // const $delete = document.querySelector('button');
-    // $delete.addEventListener('click', (event) => {
-    //     deleteMessage(event.target.id);
-    //     console.log(event.target.id);
-    //     });
-    
-    
+        })
+        .then(response => {
+            if(!response.ok) {
+                throw new Error('Something\'s not right', response.status); 
+            }
+            event.target.parentNode.remove();
+        });
+    }
 
+    messageBox.addEventListener('click', deleteMessage);
     
-
 
 })();
